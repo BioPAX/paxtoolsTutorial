@@ -156,7 +156,7 @@ Copyright \copyright\ \the\year\ \thanklessauthor
 
 \par \includegraphics[width=\linewidth/10]{by-nd.eps}  This work is licensed under a \href{http://creativecommons.org/licenses/by-nd/3.0/deed.en_US} {Creative Commons Attribution-NoDerivs 3.0 Unported License.} \index{license}
 \par Based on the the tufte-latex template by Kevin Godby, Bil Kleb, and Bill Wood. 
-\par \url{code.google.com/p/tufte-latex/} The template is distributed under Apache 2.0 License
+\par \url{tufte-latex.github.io/tufte-latex/} The template is distributed under Apache 2.0 License
 \par\textit{Second Edition, \monthyear}
 \end{fullwidth}
 \end{titlepage}
@@ -220,11 +220,11 @@ Here is a quick overview of the modules and packages they contain:
 	\item controller: This package contains classes that contain logic for traversing, copying and merging BioPAX elements as well as property editors.
 	\end{itemize}
 \item io: Simple IO package for reading/writing BioPAX files.
- \item converter: This is to convert (upgrade) BioPAX Level1, 2 to Level 3.
+\item converter: This is to convert (upgrade) BioPAX Level1, 2 to Level 3.
 \item jena IO: This module contains an alternative Jena based handler for reading/writing BioPAX files.
 \item query: This module contains graph queries such as shortest-path.
 \item PSI-MI converter: This module converts PSI-MI 2.5 files to BioPAX Level 2 or 3.
-\item Sif, GSEA and SBGN converters: These modules export BioPAX models to SIF, GSEA and SBGN (work in progress) respectively.
+\item Sif, GSEA and SBGN converters: These modules export BioPAX models to SIF, GSEA (GMT) and SBGN-ML respectively.
 \end{itemize}
 
 \section{Obtaining Paxtools}
@@ -232,16 +232,13 @@ Here is a quick overview of the modules and packages they contain:
 \subsection{Release Bundles}
 
 You can download the "Fat" jars (with dependencies) from:
-	\url{http://sourceforge.net/projects/biopax/files/paxtools/}
+	\url{http://www.biopax.org/downloads/paxtools/}
 
 This is a good choice to get things working now and worry about which modules to package with your application later.
 
-Alternatively, individual modules (compiled JARs and POMs) can be obtained from the BioPAX maven repositories:
+Alternatively, individual modules (compiled JARs and POMs) can be obtained from OSSRH and central maven repositories:
 	
-	\url{http://biopax.sourceforge.net/m2repo/snapshots} and 
-
-\url{http://biopax.sourceforge.net/m2repo/releases}
-for snapshots and stable releases respectively. 
+	\url{https://oss.sonatype.org/content/groups/public/} and \url{https://search.maven.org/#search\%7Cga\%7C1\%7CPaxtools}.
 
 Use modules to minimize the size of your application and use only the parts of Paxtools that you need. The "Core" module offers a complete implementation of BioPAX and read in/write out functionality in a very compact 400 kB package The fat jar can be as large as 16 MB most because of the Jena library and its dependencies.
 
@@ -253,26 +250,10 @@ Add the following lines into your pom.xml, within the repositories section:
 
 \begin{xmlcode}
 <repository>
-  <id>biopax.releases</id>
-  <name>BioPAX Repository at Sourceforge</name>
-  <url>http://biopax.sourceforge.net/m2repo/releases/</url>
-  <snapshots>
-   <enabled>false</enabled>
-  </snapshots>
+  <id>ossrh</id>
+  <name>OSSRH Public Maven Repository</name>
+  <url>https://oss.sonatype.org/content/groups/public/</url>
 </repository>
-\end{xmlcode}
-
-and, if you want to use the latest builds:
-
-\begin{xmlcode}
-<repository>
-  <id>biopax.snapshots</id>
-  <name>BioPAX Snapshots Repository at Sourceforge</name>
-  <url>http://biopax.sourceforge.net/m2repo/snapshots/</url>
-  <releases>
-   <enabled>false</enabled>
-  </releases>
- </repository>
 \end{xmlcode}
 
 Then, add the modules of your choice in the <dependencies> element:
@@ -281,31 +262,31 @@ Then, add the modules of your choice in the <dependencies> element:
 <dependency>
   <groupId>org.biopax.paxtools</groupId>
   <artifactId>paxtools-core</artifactId>
-  <version>4.1.5</version>
+  <version>4.3.1</version>
  </dependency>
 \end{xmlcode}
 
 
 \subsection{Downloading sources}
 
-Checkout (read-only) using the Mercurial client:
+Checkout (read-only) using the Git client:
 
 \begin{fullwidth}
 \begin{xmlcode}
-hg clone http://biopax.hg.sourceforge.net:8000/hgroot/biopax/paxtools
+git clone https://github.com/BioPAX/Paxtools.git
 \end{xmlcode}
 \end{fullwidth}
 More information on how to access to the source code can be found here: 	
 
-\url{http://biopax.sourceforge.net/paxtools/source-repository.html}
+\url{http://biopax.github.io/Paxtools/4.3.1/source-repository.html}
 
 \subsection{Documentation and Help}
 More information on Paxtools can be found at:
 \begin{fullwidth}
 \begin{itemize}
-\item Wiki: \url{http://sourceforge.net/apps/mediawiki/biopax/index.php?title=Paxtools} 
+\item Wiki (archive): \url{http://www.biopax.org/mediawiki/index.php/Paxtools} 
 
-\item API: \url{http://www.biopax.org/m2site/}
+\item API: \url{http://biopax.github.io/Paxtools/4.3.1/}
 
 \item If you get stuck or have questions, use Paxtools support mailing list: 	
 
@@ -1297,10 +1278,10 @@ We would like to thank Ethan Cerami, Istemi Bahceci, Nadia Anwar, Ugur Dogrusoz,
 \begin{fullwidth}
 Paxtools is open source software and we welcome all contributions.  Get involved! 
 \begin{itemize}
-\item Use Paxtools and report issues and feature requests.  : \url{http://biopax.sourceforge.net/paxtools/issue-tracking.html}
-\item Try your hand at fixing bugs and implementing requests .
-\item Respond to questions by other users at biopax-paxtools :  \url{http://lists.sourceforge.net/lists/listinfo/biopax-paxtools}
-\item Improve this documentation:  \url{http://sourceforge.net/p/biopax/paxtools/ci/default/tree/src/main/etc/}
+\item Use Paxtools and report issues and feature requests. : \url{https://github.com/BioPAX/Paxtools/issues}
+\item Try your hand at fixing bugs and implementing requests.
+\item Respond to questions by other users at biopax-paxtools : \url{http://lists.sourceforge.net/lists/listinfo/biopax-paxtools} or forum: \url{https://groups.google.com/forum/#!forum/biopax-discuss}
+\item Improve this documentation: \url{https://github.com/BioPAX/paxtoolsTutorial/}
 \item Spread the word. Let other people know about BioPAX and Paxtools. : \url{http://biopax.org} 
 \end{itemize}
 \end{fullwidth}

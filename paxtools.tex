@@ -238,7 +238,7 @@ This is a good choice to get things working now and worry about which modules to
 
 Alternatively, individual modules (compiled JARs and POMs) can be obtained from OSSRH and central maven repositories:
 	
-	\url{https://oss.sonatype.org/content/groups/public/} and \url{https://search.maven.org/#search\%7Cga\%7C1\%7CPaxtools}.
+	\url{https://oss.sonatype.org/content/groups/public/org/biopax/paxtools/} and \url{https://search.maven.org/#search\%7Cga\%7C1\%7CPaxtools}.
 
 Use modules to minimize the size of your application and use only the parts of Paxtools that you need. The "Core" module offers a complete implementation of BioPAX and read in/write out functionality in a very compact 400 kB package The fat jar can be as large as 16 MB most because of the Jena library and its dependencies.
 
@@ -293,7 +293,6 @@ More information on Paxtools can be found at:
 \url{biopax-paxtools@lists.sourceforge.net}
 
 \url{http://lists.sourceforge.net/lists/listinfo/biopax-paxtools}
-
 
 \item For general questions related to BioPAX, use BioPAX discuss mailing list: 
 
@@ -521,7 +520,7 @@ That's a lot of coding for a relatively common and straightforward task. The sam
 \begin{javacode}
 // Set up the Path Accessor
 PathAccessor pathAccessor = new PathAccessor(
- "Pathway/participants*:Protein/entityReference/xref:UnificationXref");
+ "Pathway/pathwayComponent*/participant:Protein/entityReference/xref:UnificationXref");
 // Iterate through all proteins in the model
 for (Pathway currentPathway : model.getObjects(Pathway.class))
 {
@@ -531,14 +530,15 @@ for (Pathway currentPathway : model.getObjects(Pathway.class))
  {
   System.out.println(
   "Unification XRef: " + currentRef.getDb() + ": " + currentRef.getId());
- }}
+ }
+}
 \end{javacode}
 \end{fullwidth}
 The format of the path query is in the form:
 
 [Initial Class]/[property1]:[classRestriction(optional)]/[property2]...
 
-A "*" sign after the property instructs path accessor to transitively traverse that property. For example, the following path accessor will traverse through all physical entity components within a complex:
+A "*" sign after the property instructs path accessor to transitively traverse that property. For example, the following path accessor will traverse through all physical entity components within a complex and its sub-complexes:
 
 \begin{javacode}
 PathAccessor accessor = new PathAccessor( 
@@ -553,7 +553,7 @@ Let's implement a simple "Inspector" that returns the list of properties and val
 
 \begin{javacode}
 public static String[][] listProperties(BioPAXElement bpe)
- {
+{
   // In order to use properties we first need an EditorMap
   EditorMap editorMap = SimpleEditorMap.L3;
   // And then get all the editors for our biopax element
@@ -572,7 +572,7 @@ public static String[][] listProperties(BioPAXElement bpe)
    row++;
   }
   return value;
- }
+}
 \end{javacode}
 
 That was easy! 
@@ -599,87 +599,84 @@ A use case where a traverser is extremely useful is getting dependents of an obj
 This is \hlred{not} a good solution though. The problem with this approach is that the add() method inserts only the reaction element (but not the participants and etc.) to our new model.  Hence, the exporter will throw an error when trying to write this model out to a file. We need a way where we can recursively get an element and its dependencies, and then add all these elements into the new model\sidenote{ The repair() method in the Model class implements the functionality given in the example. It will find and add child elements that are not currently contained in the model. } . Here is a simple implementation using Traverser\sidenote{You can also extend AbstractTraverser instead and override its public abstract visit method. See the Fetcher class for an example implementation.}:
 \begin{fullwidth}
 \begin{javacode}
-  /**
-  * A controller that excises/extracts an element and all the elements it is
-  * dependent on from a model and adds them into a new model.
-  */
- class Excisor implements Visitor
+/**
+* A controller that excises/extracts an element and all the elements it is
+* dependent on from a model and adds them into a new model.
+*/
+class Excisor implements Visitor
+{
+ private Traverser traverser;
+ private EditorMap editorMap;
+ private Model targetModel;
+ 
+ public Excisor(EditorMap editorMap)
  {
-  private Traverser traverser;
-  private EditorMap editorMap;
-  private Model targetModel;
-
-  public Excisor(EditorMap editorMap)
+  this.editorMap = editorMap;
+  this.traverser = new Traverser(editorMap, this);
+ }
+ 
+ //The visitor will add all elements that are reached into the new model,
+ // and recursively traverse it
+ public void visit(BioPAXElement domain, Object range, Model model, PropertyEditor editor)
+ {
+  // We are only interested in the BioPAXElements since
+  // primitive fields are always copied by value
+  if (range != null && range instanceof BioPAXElement)
   {
-   this.editorMap = editorMap;
-   this.traverser = new Traverser(editorMap, this);
-  }
-
-
-  //The visitor will add all elements that are reached into the new model,
-  // and recursively traverse it
-  public void visit(BioPAXElement domain, Object range, Model model,
-                    PropertyEditor editor)
-  {
-   // We are only interested in the BioPAXElements since
-   // primitive fields are always copied by value
-   if (range != null && range instanceof BioPAXElement)
+   BioPAXElement bpe = (BioPAXElement) range;
+   if (!targetModel.contains(bpe))
    {
-    BioPAXElement bpe = (BioPAXElement) range;
-
-    if (!targetModel.contains(bpe))
-    {
-     targetModel.add(bpe);
-     traverser.traverse(bpe, model);
-    }}}
+    targetModel.add(bpe);
+    traverser.traverse(bpe, model);
+   }
+  }
+ }
+}
 \end{javacode}
-
 
 The following method uses the traverser to "excise" the objects from the source model and adds them to the target model.
   
 \begin{javacode}
-  public Model excise(Model sourceModel, String... ids)
+public Model excise(Model sourceModel, String... ids)
+{
+  // Create a new model that will contain the element(s) of interest
+  this.targetModel = editorMap.getLevel().getDefaultFactory().createModel();
+  
+  for (String id : ids)
   {
-   // Create a new model that will contain the element(s) of interest
-   this.targetModel = editorMap.getLevel().getDefaultFactory().createModel();
-
-   for (String id : ids)
-   {
     // Get the BioPAX element
     BioPAXElement bpe = sourceModel.getByID(id);
     // Add it to the model
     targetModel.add(bpe);
     // Add the elements that bpe is dependent on
     traverser.traverse(bpe, sourceModel);
-   }
-
-   return targetModel;
   }
- }
+  
+  return targetModel;
+}
 \end{javacode}
 
 Optionally, Traverser uses property filters. It will not visit a property if the corresponding property editor fails to pass all the specified filters. One can define the filters by implementing org.biopax.paxtools.util.Filter interface, and add them to the constructor. 
 
 \begin{javacode}
-  public Excisor(EditorMap editorMap, boolean filtering)
+public Excisor(EditorMap editorMap, boolean filtering)
+{
+  this.editorMap = editorMap;
+  if (filtering)
+  //We will filter nextStep property, as Reactome pathways leads
+  //outside the current pathway. Step processes are listed in the
+  //pathwayComponent property as well so this does not affect the fetcher.
   {
-   this.editorMap = editorMap;
-   if (filtering)
-   //We will filter nextStep property, as Reactome pathways leads
-   //outside the current pathway. Step processes are listed in the
-   //pathwayComponent property as well so this does not affect the fetcher.
-   {
     final Filter<PropertyEditor> nextStepFilter = new Filter<PropertyEditor>()
     {
-     public boolean filter(PropertyEditor editor)
-     {
-      return !editor.getProperty().equals("nextStep");
-     }
+      public boolean filter(PropertyEditor editor)
+      {
+        return !editor.getProperty().equals("nextStep");
+      }
     };
     this.traverser = new Traverser(editorMap, this, nextStepFilter);
-   }
-   else this.traverser =  new Traverser(editorMap, this);
-  }
+  } else this.traverser =  new Traverser(editorMap, this);
+}
 \end{javacode}
 \end{fullwidth}
 

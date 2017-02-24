@@ -3,7 +3,7 @@
 This is the BioPAX [Paxtools](https://github.com/BioPAX/Paxtools) User's Guide project.
 
 ## How to edit and make (PDF document)
-1. clone this repository
-1. use a LaTeX editor, e.g, upload files and edit at [ShareLaTeX](https://www.sharelatex.com/)
-1. don't forget commit and push your changes (or submit a pull request)
 
+Clone this repository, edit using LaTeX, commit, push, export as PDF.
+
+Or, use [ShareLaTeX](https://www.sharelatex.com/project/55cba10769b600da349cdd92/), which allows to edit, make PDF, sync with Github, commit and push your changes.

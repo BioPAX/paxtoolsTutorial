@@ -6,4 +6,4 @@ This is the BioPAX [Paxtools](https://github.com/BioPAX/Paxtools) User's Guide p
 
 Clone this repository, edit using LaTeX, commit, push, export as PDF.
 
-Or, use [ShareLaTeX](https://www.sharelatex.com/project/55cba10769b600da349cdd92/), which allows to edit, make PDF, sync with Github, commit and push your changes.
+Or upload and edit on [ShareLaTeX](https://www.sharelatex.com), which allows to edit, make PDF, pull, commit and push your changes on Github (not for free though).
